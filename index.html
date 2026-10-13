@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -160,6 +161,7 @@
               <label>Bathrooms<input id="listing-baths" type="number" min="0" value="2" required></label>
               <label class="wide-label">Description<textarea id="listing-description" rows="3" required maxlength="1600"></textarea></label>
               <label class="wide-label">Property photos<input id="listing-images" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="field-hint">Select JPG, PNG or WebP photos, up to 10 MB each. Add photos when editing to keep the current ones.</span></label>
+              <label>Badge<select id="listing-badge"><option>FOR SALE</option><option>HOT DEAL</option><option>NEW LAUNCH</option><option>OFF PLAN</option></select></label>
               <label class="checkbox-label"><input id="listing-published" type="checkbox"> Publish this listing</label>
             </div>
             <div class="form-actions"><button class="button button-gold" type="submit" id="save-listing">Save listing</button><button class="button button-outline" type="button" id="cancel-edit" hidden>Cancel edit</button></div>
