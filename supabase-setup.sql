@@ -1,20 +1,77 @@
--- Run in the Supabase SQL Editor after creating your project.
--- Create the owner account in Supabase Dashboard > Authentication > Users.
--- Public anon keys belong in app.js; never use a service-role key in the browser.
+-- MR Realty — Supabase schema, Row Level Security and storage policies.
 --
--- Before running against an existing project, inspect policies on properties
--- and storage.objects. PostgreSQL combines permissive policies with OR, so any
--- additional broad policy can grant access beyond the policies defined here:
+-- Run the whole file in the Supabase SQL Editor. It is safe to re-run.
 --
--- select schemaname, tablename, policyname, roles, cmd, qual, with_check
--- from pg_policies
--- where (schemaname = 'public' and tablename = 'properties')
---    or (schemaname = 'storage' and tablename = 'objects')
--- order by schemaname, tablename, policyname;
+-- Security model: the website talks to Supabase directly with the public anon
+-- key, so THESE RULES are the security boundary. In summary:
+--   * Only users listed in public.site_owners can create, edit or delete
+--     listings, change company settings or upload photos.
+--   * Owners can only touch their own rows and their own "<user-id>/" photo folder.
+--   * Visitors can read published listings only, and cannot see owner_id.
+--   * owner_id, created_at and updated_at are controlled by the database.
+--   * Nobody can list the contents of the photo bucket.
+--
+-- After running, add your owner account (see STEP 7 at the bottom).
 
+-- ---------------------------------------------------------------------------
+-- 1. Site owners allow-list
+-- ---------------------------------------------------------------------------
+create table if not exists public.site_owners (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+-- RLS on with no policies = nobody can read or change this table through the
+-- API. Manage it only from the SQL Editor / dashboard.
+alter table public.site_owners enable row level security;
+revoke all on public.site_owners from anon, authenticated;
+
+-- Carry over owners authorised with the earlier version of this file.
+do $$
+begin
+  if to_regclass('private.mr_realty_owners') is not null then
+    insert into public.site_owners (user_id)
+    select user_id from private.mr_realty_owners
+    on conflict do nothing;
+  end if;
+end $$;
+
+-- SECURITY DEFINER so it can read site_owners even though API users cannot;
+-- fixed search_path so it cannot be hijacked.
+create or replace function public.is_site_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.site_owners where user_id = (select auth.uid())
+  );
+$$;
+
+revoke all on function public.is_site_owner() from public;
+grant execute on function public.is_site_owner() to anon, authenticated;
+
+-- Older helper name used by the previous version; keep it working.
+create or replace function public.is_mr_realty_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select public.is_site_owner();
+$$;
+revoke all on function public.is_mr_realty_owner() from public, anon;
+grant execute on function public.is_mr_realty_owner() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 2. Properties table and data rules
+-- ---------------------------------------------------------------------------
 create table if not exists public.properties (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references auth.users(id) on delete cascade,
+  owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   title text not null check (char_length(title) between 1 and 120),
   location text not null check (char_length(location) between 1 and 100),
   type text not null check (type in ('Apartment', 'Villa', 'Townhouse', 'Penthouse', 'Studio')),
@@ -30,114 +87,145 @@ create table if not exists public.properties (
   updated_at timestamptz not null default now()
 );
 
+-- Upgrades for projects created with earlier versions of this file.
 alter table public.properties
-  add column if not exists photos text[] not null default '{}';
-alter table public.properties
+  add column if not exists photos text[] not null default '{}',
   add column if not exists launch_date date,
   add column if not exists reservation_amount numeric(14, 2),
   add column if not exists is_hot_deal boolean not null default false,
-  add column if not exists is_featured boolean not null default false;
-
-alter table public.properties
+  add column if not exists is_featured boolean not null default false,
   add column if not exists region text not null default '',
   add column if not exists property_status text not null default 'ready',
   add column if not exists is_new_launch boolean not null default false;
+alter table public.properties alter column owner_id set default auth.uid();
 
 alter table public.properties drop constraint if exists properties_type_check;
-alter table public.properties
-  add constraint properties_type_check
+alter table public.properties add constraint properties_type_check
   check (type in ('Apartment', 'Villa', 'Townhouse', 'Penthouse', 'Studio'));
 
 alter table public.properties drop constraint if exists properties_property_status_check;
-alter table public.properties
-  add constraint properties_property_status_check
+alter table public.properties add constraint properties_property_status_check
   check (property_status in ('ready', 'off_plan'));
+
+-- The badge is free text in the dashboard, so only its length is limited.
+alter table public.properties drop constraint if exists properties_badge_check;
+alter table public.properties add constraint properties_badge_check
+  check (char_length(badge) between 1 and 40);
+
+alter table public.properties drop constraint if exists properties_beds_max_check;
+alter table public.properties add constraint properties_beds_max_check
+  check (beds <= 50 and baths <= 50);
+
+alter table public.properties drop constraint if exists properties_photos_check;
+alter table public.properties add constraint properties_photos_check
+  check (cardinality(photos) <= 20);
+
+alter table public.properties drop constraint if exists properties_image_url_check;
+alter table public.properties add constraint properties_image_url_check
+  check (image_url ~ '^https://');
 
 update public.properties
 set is_hot_deal = true
 where lower(badge) = 'hot deal' and is_hot_deal = false;
 
--- Only project administrators can manage this allowlist. Add the owner's Auth
--- user UUID after running this setup; do not grant membership to all users.
-create schema if not exists private;
-revoke all on schema private from public, anon, authenticated;
-
-create table if not exists private.mr_realty_owners (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  authorized_at timestamptz not null default now()
-);
-revoke all on table private.mr_realty_owners from public, anon, authenticated;
-alter table private.mr_realty_owners enable row level security;
-
--- After this migration has run, authorize only the intended Auth user in a
--- separate SQL Editor query. Replace the placeholder with that user's UUID:
---
--- insert into private.mr_realty_owners (user_id)
--- values ('<AUTH_USER_UUID>'::uuid)
--- on conflict (user_id) do nothing;
-
-create or replace function public.is_mr_realty_owner()
-returns boolean
-language sql
-stable
-security definer
+-- The database, not the browser, decides owner_id and timestamps, and every
+-- photo URL must be https.
+create or replace function public.properties_before_write()
+returns trigger
+language plpgsql
 set search_path = ''
 as $$
-  select exists (
-    select 1
-    from private.mr_realty_owners
-    where user_id = (select auth.uid())
-  );
-$$;
-revoke all on function public.is_mr_realty_owner() from public, anon;
-grant execute on function public.is_mr_realty_owner() to authenticated;
+declare
+  photo_url text;
+begin
+  if tg_op = 'INSERT' then
+    -- Signed-in users always own what they create. (In the SQL Editor there is
+    -- no signed-in user, so an explicitly given owner_id is kept for seeding.)
+    new.owner_id := coalesce((select auth.uid()), new.owner_id);
+    new.created_at := now();
+  else
+    new.owner_id := old.owner_id;     -- ownership can never be transferred
+    new.created_at := old.created_at;
+  end if;
+  new.updated_at := now();
 
+  foreach photo_url in array new.photos loop
+    if photo_url is null or photo_url !~ '^https://' then
+      raise exception 'Every photo URL must use https' using errcode = '22023';
+    end if;
+  end loop;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists properties_before_write on public.properties;
+create trigger properties_before_write
+  before insert or update on public.properties
+  for each row execute function public.properties_before_write();
+
+-- ---------------------------------------------------------------------------
+-- 3. Table privileges (what each role may touch at all)
+-- ---------------------------------------------------------------------------
+-- Visitors: read-only, and only the public columns (owner_id stays hidden).
+-- The website must therefore list these columns instead of using select=*.
+revoke all on public.properties from anon;
+grant select (id, title, location, type, price, beds, baths, description,
+              image_url, photos, badge, published, created_at, launch_date,
+              reservation_amount, is_hot_deal, is_featured, region,
+              property_status, is_new_launch)
+  on public.properties to anon;
+
+-- Signed-in users: normal CRUD, but no TRUNCATE / TRIGGER / REFERENCES.
+-- RLS below further limits this to site owners and their own rows.
+revoke all on public.properties from authenticated;
+grant select, insert, update, delete on public.properties to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 4. Row Level Security on properties
+-- ---------------------------------------------------------------------------
 alter table public.properties enable row level security;
+alter table public.properties force row level security;
 
 drop policy if exists "Anyone can read published properties" on public.properties;
 create policy "Anyone can read published properties"
   on public.properties for select
+  to anon, authenticated
   using (published = true);
 
 drop policy if exists "Owners can read their own properties" on public.properties;
 create policy "Owners can read their own properties"
-  on public.properties for select to authenticated
-  using (
-    public.is_mr_realty_owner()
-    and owner_id = (select auth.uid())
-  );
+  on public.properties for select
+  to authenticated
+  using (owner_id = (select auth.uid()) and (select public.is_site_owner()));
 
 drop policy if exists "Owners can insert their own properties" on public.properties;
 create policy "Owners can insert their own properties"
-  on public.properties for insert to authenticated
-  with check (
-    public.is_mr_realty_owner()
-    and owner_id = (select auth.uid())
-  );
+  on public.properties for insert
+  to authenticated
+  with check (owner_id = (select auth.uid()) and (select public.is_site_owner()));
 
 drop policy if exists "Owners can update their own properties" on public.properties;
 create policy "Owners can update their own properties"
-  on public.properties for update to authenticated
-  using (
-    public.is_mr_realty_owner()
-    and owner_id = (select auth.uid())
-  )
-  with check (
-    public.is_mr_realty_owner()
-    and owner_id = (select auth.uid())
-  );
+  on public.properties for update
+  to authenticated
+  using (owner_id = (select auth.uid()) and (select public.is_site_owner()))
+  with check (owner_id = (select auth.uid()) and (select public.is_site_owner()));
 
 drop policy if exists "Owners can delete their own properties" on public.properties;
 create policy "Owners can delete their own properties"
-  on public.properties for delete to authenticated
-  using (
-    public.is_mr_realty_owner()
-    and owner_id = (select auth.uid())
-  );
+  on public.properties for delete
+  to authenticated
+  using (owner_id = (select auth.uid()) and (select public.is_site_owner()));
 
 create index if not exists properties_published_created_at_idx
   on public.properties (published, created_at desc);
+create index if not exists properties_owner_id_idx
+  on public.properties (owner_id);
 
+-- ---------------------------------------------------------------------------
+-- 5. Company settings (public read, owner-only write)
+-- ---------------------------------------------------------------------------
 create table if not exists public.company_settings (
   id boolean primary key default true check (id is true),
   company_name text not null default 'MR Realty',
@@ -163,9 +251,11 @@ create table if not exists public.company_settings (
 alter table public.company_settings
   add column if not exists x_url text not null default '',
   add column if not exists youtube_url text not null default '',
-  add column if not exists tiktok_url text not null default '';
-alter table public.company_settings add column if not exists site_content jsonb not null default '{}'::jsonb;
+  add column if not exists tiktok_url text not null default '',
+  add column if not exists site_content jsonb not null default '{}'::jsonb;
+
 alter table public.company_settings enable row level security;
+alter table public.company_settings force row level security;
 revoke all on table public.company_settings from public, anon, authenticated;
 grant select on table public.company_settings to anon, authenticated;
 grant insert, update on table public.company_settings to authenticated;
@@ -178,54 +268,85 @@ create policy "Anyone can read published company settings"
 drop policy if exists "Authorized owners can create company settings" on public.company_settings;
 create policy "Authorized owners can create company settings"
   on public.company_settings for insert to authenticated
-  with check (public.is_mr_realty_owner() and id is true);
+  with check ((select public.is_site_owner()) and id is true);
 
 drop policy if exists "Authorized owners can update company settings" on public.company_settings;
 create policy "Authorized owners can update company settings"
   on public.company_settings for update to authenticated
-  using (public.is_mr_realty_owner() and id is true)
-  with check (public.is_mr_realty_owner() and id is true);
+  using ((select public.is_site_owner()) and id is true)
+  with check ((select public.is_site_owner()) and id is true);
 
--- One public image bucket. Object policies restrict every write to the signed-in
--- owner's own UUID-prefixed directory; public visitors can only read images.
+-- ---------------------------------------------------------------------------
+-- 6. Photo storage
+-- ---------------------------------------------------------------------------
+-- Public bucket: anyone with a photo's URL can view it (needed for the site),
+-- but there is deliberately NO public SELECT policy, so nobody can list or
+-- browse the bucket's contents. Only JPG/PNG/WebP up to 10 MB are accepted.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('property-images', 'property-images', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
-on conflict (id) do update set public = true, file_size_limit = 10485760,
+on conflict (id) do update set
+  public = true,
+  file_size_limit = 10485760,
   allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
 
+-- Removed: this let anyone list every file in the bucket.
 drop policy if exists "Anyone can view property images" on storage.objects;
-create policy "Anyone can view property images"
+
+-- Owners can see their own folder (needed to replace or delete their photos).
+drop policy if exists "Owners can view their property images" on storage.objects;
+create policy "Owners can view their property images"
   on storage.objects for select
-  using (bucket_id = 'property-images');
+  to authenticated
+  using (
+    bucket_id = 'property-images'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+    and (select public.is_site_owner())
+  );
 
 drop policy if exists "Owners can upload property images" on storage.objects;
 create policy "Owners can upload property images"
-  on storage.objects for insert to authenticated
+  on storage.objects for insert
+  to authenticated
   with check (
-    public.is_mr_realty_owner()
-    and bucket_id = 'property-images'
+    bucket_id = 'property-images'
     and (storage.foldername(name))[1] = (select auth.uid())::text
+    and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'webp')
+    and (select public.is_site_owner())
   );
 
 drop policy if exists "Owners can update their property images" on storage.objects;
 create policy "Owners can update their property images"
-  on storage.objects for update to authenticated
+  on storage.objects for update
+  to authenticated
   using (
-    public.is_mr_realty_owner()
-    and bucket_id = 'property-images'
+    bucket_id = 'property-images'
     and (storage.foldername(name))[1] = (select auth.uid())::text
+    and (select public.is_site_owner())
   )
   with check (
-    public.is_mr_realty_owner()
-    and bucket_id = 'property-images'
+    bucket_id = 'property-images'
     and (storage.foldername(name))[1] = (select auth.uid())::text
+    and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'webp')
+    and (select public.is_site_owner())
   );
 
 drop policy if exists "Owners can delete their property images" on storage.objects;
 create policy "Owners can delete their property images"
-  on storage.objects for delete to authenticated
+  on storage.objects for delete
+  to authenticated
   using (
-    public.is_mr_realty_owner()
-    and bucket_id = 'property-images'
+    bucket_id = 'property-images'
     and (storage.foldername(name))[1] = (select auth.uid())::text
+    and (select public.is_site_owner())
   );
+
+-- Make the API pick up the new columns immediately.
+notify pgrst, 'reload schema';
+
+-- ---------------------------------------------------------------------------
+-- 7. Add your owner account (run once, after creating the user in
+--    Authentication -> Users). Replace the email, uncomment, and run.
+-- ---------------------------------------------------------------------------
+-- insert into public.site_owners (user_id)
+-- select id from auth.users where email = 'owner@yourdomain.com'
+-- on conflict do nothing;

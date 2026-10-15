@@ -231,7 +231,7 @@ async function loadPublicProperties() {
     return;
   }
   try {
-    const rows = await supabaseRequest("/rest/v1/properties?select=*&published=eq.true&order=created_at.desc");
+    const rows = await supabaseRequest("/rest/v1/properties?select=id,title,location,type,price,beds,baths,description,image_url,photos,badge,published,created_at,launch_date,reservation_amount,is_hot_deal,is_featured,region,property_status,is_new_launch&published=eq.true&order=created_at.desc");
     state.properties = rows;
   } catch (error) {
     console.error(error);
