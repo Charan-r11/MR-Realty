@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#11100f">
+    <meta name="description" content="Discover exceptional homes, new launches and investment opportunities across the UAE with MR Realty.">
+    <title>MR Realty | Exceptional UAE Properties</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="MR Realty home">
+        <img class="brand-logo" id="header-logo"
+     src="mr-realty-logo-dark.png"
+     alt="MR Realty — Spaces today, brighter tomorrows">
+      </a>
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <a href="#home">Home</a>
+        <a href="#properties">All Properties</a>
+        <a href="#launches">New Launches</a>
+        <a href="#hot-deals">Hot Deals</a>
+        <a href="#approach">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <a class="header-whatsapp" href="#" data-whatsapp aria-label="Chat with MR Realty on WhatsApp">
+        <span aria-hidden="true">◉</span> WhatsApp
+      </a>
+    </header>
+
+    <main>
+      <section class="hero section-wrap" id="home">
+        <div class="hero-copy">
+          <p class="eyebrow" id="hero-eyebrow">LUXURY LIVING IN THE UAE</p>
+          <h1 id="website-headline">Discover Exceptional Properties Across the UAE.</h1>
+          <p class="hero-intro" id="website-introduction">From waterfront residences in Dubai to family villas in Abu Dhabi and lifestyle homes across the Emirates, MR Realty curates exceptional opportunities for buyers, investors, and families.</p>
+          <div class="hero-actions">
+            <a class="button button-gold" href="#properties">Explore Properties</a>
+            <a class="button button-outline" href="#launches">Discover New Launches</a>
+          </div>
+          <form class="search-panel" id="search-form">
+            <label>Location
+              <select id="filter-location">
+                <option value="">All emirates</option>
+                <option>Dubai</option><option>Abu Dhabi</option><option>Sharjah</option><option>Ras Al Khaimah</option>
+              </select>
+            </label>
+            <label>Property Type
+              <select id="filter-type">
+                <option value="">Any</option>
+                <option>Apartment</option><option>Villa</option><option>Townhouse</option><option>Penthouse</option>
+              </select>
+            </label>
+            <label>Max Price (AED)
+              <input id="filter-price" type="number" min="0" step="50000" placeholder="e.g. 5000000">
+            </label>
+            <button class="button button-gold search-button" type="submit">Search</button>
+          </form>
+        </div>
+        <div class="hero-visual">
+          <img id="hero-image" src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1100&q=85" alt="Dubai skyline at golden hour">
+          <div class="hero-image-caption"><span class="caption-dot"></span> <span id="hero-caption">A city built for what comes next</span></div>
+        </div>
+        <div class="hero-footnote"><span>01</span><span class="footnote-line"></span><span>CURATED UAE REAL ESTATE</span></div>
+      </section>
+
+      <section class="section-wrap property-section" id="properties">
+        <div class="section-heading">
+          <div><p class="eyebrow" id="listings-eyebrow">A PLACE TO CALL YOURS</p><h2 id="listings-heading">Featured Homes</h2></div>
+          <a class="text-link" href="#properties">Explore all properties <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="property-grid" id="featured-grid" aria-live="polite"></div>
+        <p class="empty-state" id="empty-state" hidden>No properties match those filters. Try broadening your search.</p>
+      </section>
+
+      <section class="section-wrap deals-section" id="hot-deals">
+        <div class="section-heading">
+          <div><p class="eyebrow" id="deals-eyebrow">LIMITED OPPORTUNITIES</p><h2 id="deals-heading">Today’s Hot Deals</h2></div>
+          <a class="text-link" href="#properties">View all homes <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="property-grid" id="deals-grid" aria-live="polite"></div>
+        <p class="empty-state" id="deals-empty-state" hidden>There are no hot deals available right now. Check back soon.</p>
+      </section>
+
+      <section class="launch-section" id="launches">
+        <div class="launch-image">
+          <img id="launch-image" src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=85" alt="Contemporary villa opening onto a landscaped garden">
+        </div>
+        <div class="launch-copy">
+          <p class="eyebrow" id="launch-eyebrow">THE NEXT CHAPTER STARTS HERE</p>
+          <h2 id="launch-heading">Find your place in what’s next.</h2>
+          <p id="launch-text">Explore handpicked residences, standout new launches, and considered investment opportunities throughout the UAE.</p>
+          <a class="button button-gold" href="#properties" id="launch-button">Explore our collection</a>
+        </div>
+      </section>
+
+      <section class="section-wrap approach-section" id="approach">
+        <div class="section-heading">
+          <div><p class="eyebrow" id="about-tagline">THE MR REALTY DIFFERENCE</p><h2 id="about-heading">Property, with a personal perspective.</h2></div>
+          <p class="section-note" id="about-summary">Local insight. Thoughtful guidance. A real person at every step.</p>
+        </div>
+        <p class="about-copy" id="about-copy">A carefully selected range of homes and investments, tailored around what matters to you.</p>
+        <div class="value-grid">
+          <article class="value-card"><span>01</span><h3 id="value-1-title">Know the market</h3><p id="value-1-text">Clear, considered advice shaped by a deep understanding of the UAE property landscape.</p></article>
+          <article class="value-card"><span>02</span><h3 id="value-2-title">Find your fit</h3><p id="value-2-text">A carefully selected range of homes and investments, tailored around what matters to you.</p></article>
+          <article class="value-card"><span>03</span><h3 id="value-3-title">Move with confidence</h3><p id="value-3-text">Personal support from your first conversation through to the keys in your hand.</p></article>
+        </div>
+      </section>
+
+      <section class="contact-section" id="contact">
+        <div class="contact-content">
+          <p class="eyebrow" id="contact-eyebrow">LET’S FIND YOUR NEXT MOVE</p>
+          <h2 id="contact-heading">Good things start with a conversation.</h2>
+          <p id="contact-copy">Tell us what you’re looking for. We’ll help you find the right place, at the right pace.</p>
+          <a class="button button-gold" href="#" data-whatsapp>Talk to our team on WhatsApp <span aria-hidden="true">↗</span></a>
+          <div class="contact-details" id="contact-details"></div>
+        </div>
+        <div class="contact-orbit" aria-hidden="true">MR</div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="brand footer-brand" href="#home" aria-label="MR Realty home">
+        <img class="brand-logo" id="footer-logo"
+     src="mr-realty-logo-dark.png"
+     alt="MR Realty — Spaces today, brighter tomorrows"></a>
+      <p id="footer-copy">Thoughtful property guidance across the UAE.</p>
+      <div class="footer-contact" id="footer-contact"></div>
+      <div class="footer-socials" id="footer-socials"></div>
+      <button class="owner-link" id="owner-login-button" type="button">Owner login</button>
+      <span class="copyright">© <span id="year"></span> <span id="footer-company-name">MR Realty</span>. All rights reserved.</span>
+    </footer>
+
+    <a class="whatsapp-float" href="#" data-whatsapp aria-label="WhatsApp MR Realty"><span aria-hidden="true">◉</span></a>
+
+    <dialog class="property-dialog" id="property-dialog" aria-labelledby="dialog-title">
+      <button class="dialog-close" type="button" data-close-dialog aria-label="Close property details">×</button>
+      <div id="property-detail"></div>
+    </dialog>
+
+    <dialog class="dashboard-dialog" id="dashboard-dialog" aria-labelledby="dashboard-title">
+      <button class="dialog-close" type="button" data-close-dashboard aria-label="Close owner dashboard">×</button>
+      <div class="dashboard-content">
+        <p class="eyebrow">MR REALTY · PRIVATE</p>
+        <h2 id="dashboard-title">Owner Dashboard</h2>
+        <div id="dashboard-status" class="notice" role="status"></div>
+        <form class="login-form" id="login-form" hidden>
+          <label>Email address<input type="email" id="login-email" autocomplete="username" required></label>
+          <label>Password<input type="password" id="login-password" autocomplete="current-password" required></label>
+          <button class="button button-gold" type="submit">Sign in securely</button>
+        </form>
+        <div id="dashboard-manager" hidden>
+          <div class="dashboard-toolbar"><p>Manage your published and draft listings.</p><button class="button button-outline" id="logout-button" type="button">Sign out</button></div>
+          <form class="listing-form whatsapp-form" id="whatsapp-form">
+            <h3>WhatsApp number</h3>
+            <p class="field-hint">Every WhatsApp button on the homepage opens a chat with this number. Choose your country code, then type your number without the leading 0.</p>
+            <div class="form-grid">
+              <label>Country code<select id="quick-whatsapp-code"></select></label>
+              <label>Your WhatsApp number<input id="quick-whatsapp" type="tel" inputmode="numeric" maxlength="15" placeholder="58 859 3844" required></label>
+              <div class="form-actions"><button class="button button-gold" type="submit" id="save-whatsapp">Save WhatsApp number</button></div>
+            </div>
+          </form>
+          <form class="listing-form" id="listing-form">
+            <input id="listing-id" type="hidden">
+            <h3 id="listing-form-heading">Add a property</h3>
+            <div class="form-grid">
+              <label>Listing title<input id="listing-title" required maxlength="120"></label>
+              <label>Location<input id="listing-location" placeholder="Dubai, UAE" required maxlength="100"></label>
+              <label>Property type<select id="listing-type" required><option>Apartment</option><option>Villa</option><option>Townhouse</option><option>Penthouse</option></select></label>
+              <label>Price (AED)<input id="listing-price" type="number" min="1" required></label>
+              <label>Bedrooms<input id="listing-beds" type="number" min="0" value="2" required></label>
+              <label>Bathrooms<input id="listing-baths" type="number" min="0" value="2" required></label>
+                <label>Launch date<input id="listing-launch-date" type="date"></label>
+                <label>Reservation amount (AED)<input id="listing-reservation-amount" type="number" min="0" step="0.01"></label>
+                <label class="wide-label">Listing badge<input id="listing-badge" maxlength="40" placeholder="FOR SALE"></label>
+                <label class="wide-label">Description<textarea id="listing-description" rows="3" required maxlength="1600"></textarea></label>
+                <label class="wide-label">Property photos<input id="listing-images" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="field-hint">Select JPG, PNG or WebP photos, up to 10 MB each. Add photos when editing to keep the current ones.</span></label>
+                <div class="wide-label existing-photos" id="existing-photos" hidden></div>
+                <label class="checkbox-label"><input id="listing-published" type="checkbox"> Publish this listing</label>
+                <label class="checkbox-label"><input id="listing-hot-deal" type="checkbox"> Feature as a Hot Deal</label>
+                <label class="checkbox-label"><input id="listing-featured" type="checkbox"> Feature on homepage</label>
+            </div>
+            <div class="form-actions"><button class="button button-gold" type="submit" id="save-listing">Save listing</button><button class="button button-outline" type="button" id="cancel-edit" hidden>Cancel edit</button></div>
+          </form>
+          <div id="managed-listings" class="managed-listings"></div>
+          <details class="company-settings" id="site-content-details">
+            <summary>Website Photos and Headlines</summary>
+            <form class="listing-form settings-form" id="site-content-form">
+              <div class="form-grid">
+                <label>Hero small heading<input id="content-hero-eyebrow" maxlength="120"></label>
+                <label>Hero photo caption<input id="content-hero-caption" maxlength="160"></label>
+                <label class="wide-label">Hero photo<input id="content-hero-image" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-hint">Leave empty to keep the current photo.</span></label>
+                <label>Featured section small heading<input id="content-listings-eyebrow" maxlength="120"></label>
+                <label>Featured section heading<input id="content-listings-heading" maxlength="120"></label>
+                <label>Hot deals small heading<input id="content-deals-eyebrow" maxlength="120"></label>
+                <label>Hot deals heading<input id="content-deals-heading" maxlength="120"></label>
+                <label>New launches small heading<input id="content-launch-eyebrow" maxlength="120"></label>
+                <label>New launches heading<input id="content-launch-heading" maxlength="160"></label>
+                <label class="wide-label">New launches text<textarea id="content-launch-text" rows="3" maxlength="800"></textarea></label>
+                <label>New launches button text<input id="content-launch-button" maxlength="60"></label>
+                <label>Contact small heading<input id="content-contact-eyebrow" maxlength="120"></label>
+                <label class="wide-label">New launches photo<input id="content-launch-image" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-hint">Leave empty to keep the current photo.</span></label>
+                <label>Highlight 1 title<input id="content-value-1-title" maxlength="80"></label>
+                <label>Highlight 1 text<input id="content-value-1-text" maxlength="300"></label>
+                <label>Highlight 2 title<input id="content-value-2-title" maxlength="80"></label>
+                <label>Highlight 2 text<input id="content-value-2-text" maxlength="300"></label>
+                <label>Highlight 3 title<input id="content-value-3-title" maxlength="80"></label>
+                <label>Highlight 3 text<input id="content-value-3-text" maxlength="300"></label>
+              </div>
+              <div class="form-actions"><button class="button button-gold" type="submit" id="save-site-content">Save photos and headlines</button><button class="button button-outline" type="button" id="reset-site-content">Restore defaults</button></div>
+            </form>
+          </details>
+          <details class="company-settings">
+            <summary>Company Settings and Website Content</summary>
+            <form class="listing-form settings-form" id="company-settings-form">
+              <div class="form-grid">
+                <label>Company name<input id="settings-company-name" maxlength="120" required></label>
+                <label>Company tagline<input id="settings-tagline" maxlength="180"></label>
+                <label class="wide-label">Company logo<input id="settings-logo" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-hint" id="current-logo-label">Choose a JPG, PNG or WebP image up to 10 MB.</span></label>
+                <label>Business phone<input id="settings-phone" type="tel" maxlength="40"></label>
+                <label>WhatsApp number<input id="settings-whatsapp" type="tel" maxlength="40" placeholder="971588593844"></label>
+                <label>Contact email<input id="settings-email" type="email" maxlength="254"></label>
+                <label>Office address<input id="settings-address" maxlength="300"></label>
+                <label class="wide-label">Website headline<input id="settings-headline" maxlength="180" required></label>
+                <label class="wide-label">Homepage introduction<textarea id="settings-introduction" rows="3" maxlength="1200"></textarea></label>
+                <label class="wide-label">About Us text<textarea id="settings-about" rows="4" maxlength="2400"></textarea></label>
+                <label>About section heading<input id="settings-about-heading" maxlength="180"></label>
+                <label>About summary<input id="settings-about-summary" maxlength="300"></label>
+                <label>Contact section heading<input id="settings-contact-heading" maxlength="180"></label>
+                <label class="wide-label">Contact section text<textarea id="settings-contact-copy" rows="3" maxlength="1200"></textarea></label>
+                <label>Instagram URL<input id="settings-instagram" type="url" maxlength="500" placeholder="https://"></label>
+                <label>Facebook URL<input id="settings-facebook" type="url" maxlength="500" placeholder="https://"></label>
+                <label>LinkedIn URL<input id="settings-linkedin" type="url" maxlength="500" placeholder="https://"></label>
+                <label>Footer text<input id="settings-footer" maxlength="300"></label>
+              </div>
+              <div class="form-actions"><button class="button button-gold" type="submit" id="save-company-settings">Save company settings</button></div>
+            </form>
+          </details>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>
